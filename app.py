@@ -2,23 +2,19 @@ import streamlit as st
 from ultralytics import YOLO
 import cv2
 
-st.title("YOLO Real-Time Dashboard")
+st.title("YOLO Dashboard (Upload Image/Video)")
 
-# Load YOLO model
 model = YOLO("yolov8m.pt")
 
-# Open webcam
-cap = cv2.VideoCapture(0)
-stframe = st.empty()
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    # Run YOLO on each frame
-    results = model.predict(frame, conf=0.5, verbose=False)
-    annotated_frame = results[0].plot()
-
-    # Show live detections in browser
-    stframe.image(annotated_frame, channels="BGR")
+uploaded_file = st.file_uploader("Upload an image or video", type=["jpg","jpeg","png","mp4"])
+if uploaded_file is not None:
+    file_bytes = uploaded_file.read()
+    if uploaded_file.type.startswith("image"):
+        import numpy as np
+        import PIL.Image
+        image = PIL.Image.open(uploaded_file)
+        results = model.predict(image, conf=0.5)
+        st.image(results[0].plot(), caption="Detections")
+    else:
+        st.video(uploaded_file)
+        st.write("Video uploaded — detection not live in cloud.")
